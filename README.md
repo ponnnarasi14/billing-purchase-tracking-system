@@ -180,11 +180,15 @@ Service layer used for business logic
 Clean separation of concerns (Controller → Service → Model)
 
 ** Screenshots for Submission**
+<img width="1917" height="1380" alt="Customer-Billing" src="https://github.com/user-attachments/assets/c1b3931c-d981-4667-aada-c3c6303d7009" />
 
 Billing Page – 1 (Empty & Filled)
-
 Billing Page – 2 (Generated Invoice)
 
 Database tables (Invoices, Invoice Items)
 
 Sample business insight API responses
+<img width="1920" height="889" alt="Customer-purchase" src="https://github.com/user-attachments/assets/2ef5c892-fb8a-498f-8f36-49fde412bb7b" />
+
+<img width="1920" height="889" alt="Customer-Billing" src="https://github.com/user-attachments/assets/3325e688-e0df-4663-b4a0-64c0a36576f9" />
+
