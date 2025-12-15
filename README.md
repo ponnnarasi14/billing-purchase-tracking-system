@@ -193,10 +193,11 @@ Billing Page – 1 (Empty & Filled)
 
 Billing Page – 2 (Generated Invoice)
 
+
 Database tables (Invoices, Invoice Items)
 
 Sample business insight API responses!
 
-![customer billing](image.png)
+![customer Bill and Generate invoice](public/image/Customer-Billing.png)
 ![customer purchase history](public/image/customer-purchase-history.png)
 ![customer purchase product history details](public/image/customer-purchase-product-detail.png)
