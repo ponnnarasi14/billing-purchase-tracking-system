@@ -49,8 +49,8 @@ class DenominationService
 
         return 
         [
-            'breakdown' => $breakdown, 
-            'remaining' => $remaining
+            'breakdown' => $breakdown ?? [], 
+            'remaining' => $remaining ?? 0,
         ];
     }
 

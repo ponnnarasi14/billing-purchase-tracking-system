@@ -47,25 +47,41 @@
     const token = document.querySelector('meta[name="csrf-token"]').content;
 
     /* Load products */
+    let productList = [];
+
     function loadProducts() {
         fetch('/products')
             .then(res => res.json())
             .then(products => {
+                productList = products;
+
                 document.querySelectorAll('.product').forEach(select => {
-                    select.innerHTML = '';
-                    products.forEach(p => {
-                        select.innerHTML += `
-                            <option value="${p.id}">
-                                ${p.name} - ₹${p.price}
-                            </option>`;
-                    });
+                    fillProductOptions(select);
                 });
             });
+    }
+
+    function fillProductOptions(select) {
+        select.innerHTML = `<option value="">Select Product</option>`;
+
+        productList.forEach(p => {
+            select.innerHTML += `
+                <option value="${p.id}">
+                    ${p.name} - ₹${p.price}
+                </option>
+            `;
+        });
     }
 
     /* Add product row */
     function addRow() {
         const table = document.querySelector('#itemsTable tbody');
+
+        // RESET first row correctly
+        const firstProduct = table.querySelector('tr:first-child .product');
+        if (firstProduct) {
+            firstProduct.value = ""; // reset safely
+        }
 
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -81,8 +97,10 @@
         `;
 
         table.appendChild(row);
-        loadProducts();
+
+        fillProductOptions(row.querySelector('.product'));
     }
+
 
     function removeRow(btn) {
         btn.closest('tr').remove();

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\InvoiceMail;
 use Illuminate\Http\Request;
 use App\Models\Invoice;
 use App\Services\InvoiceService;
@@ -35,8 +36,6 @@ class InvoiceController extends Controller
 
         try{
             $invoice = $this->invoiceService->createInvoice($validated);
-
-         
 
             return response()->json([
                 'success' => true,

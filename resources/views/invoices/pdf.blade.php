@@ -5,8 +5,8 @@
         <p>
             <strong>Invoice No: </strong>{{ $invoice->invoice_number }}<br>
             <strong>Date : </strong>{{ $invoice->created_at->format('d-m-Y') }}<br>
-            <strong>Customer Name: </strong>{{ $invoice->customer->name }}<br>
-            <strong>Customer email: </strong>{{ $invoice->customer->email }}<br>
+            <strong>Customer Name: </strong>{{ $invoice->customer?->name }}<br>
+            <strong>Customer email: </strong>{{ $invoice->customer?->email }}<br>
 
         </p>
         <table>
@@ -22,8 +22,8 @@
             <tbody>
                 @foreach($invoice->invoiceItems as $item)
                 <tr>
-                    <td>{{ $item->product->name }}</td>
-                    <td class="right">{{ $item->product->quantity }}</td>
+                    <td>{{ $item->product?->name ?? 'N/A' }}</td>
+                    <td class="right">{{ $item->quantity }}</td>
                     <td class="right">{{ number_format($item->unit_price, 2) }}</td>
                     <td class="right">{{ $item->tax_percentage  }}%</td>
                     <td class="right">{{ number_format($item->total_price + $item->total_tax, 2) }}</td>
@@ -56,9 +56,11 @@
         @if(!empty($invoice->balance_breakdown))
         <h4>Balance Denominations</h4>
         <ul>
-            @foreach($invoice->balance_breakdown as $value => $count)
-                <li>₹{{ $value }} x {{ $count }}</li>
-            @endforeach
+            @if(!empty($invoice->balance_breakdown))
+                @foreach ($invoice->balance_breakdown as $note => $count)
+                    <p>₹{{ $note }} x {{ $count }}</p>
+                @endforeach
+            @endif
         </ul>
         @endif
     </body>

@@ -47,9 +47,11 @@
             @if($invoice->balance_breakdown)
             <h4>Balance Denomination</h4>
             <ul>
-                @foreach($invoice->balance_breakdown as  $val=>$count)
-                <li>₹ {{ $val }} * {{ $count }}</li>
-                @endforeach
+                @if(!empty($invoice->balance_breakdown))
+                    @foreach ($invoice->balance_breakdown as $note => $count)
+                        <p>₹{{ $note }} x {{ $count }}</p>
+                    @endforeach
+                @endif
             </ul>
             @endif
         </div>

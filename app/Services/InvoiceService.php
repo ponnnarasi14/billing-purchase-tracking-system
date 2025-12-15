@@ -8,9 +8,10 @@ use App\Models\Customer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use App\Services\DenominationService;
-use PDF; // from barryvdh/laravel-dompdf
+
 use App\Mail\InvoiceMail;
 use Illuminate\Support\Facades\Mail;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class InvoiceService
 {
@@ -32,6 +33,7 @@ class InvoiceService
                 ['name' => $payload['name'] ?? null]
             );
 
+            //calculate items
             $subTotal = 0;
             $totalTax = 0;
             $preparedItems = [];
@@ -50,7 +52,7 @@ class InvoiceService
                 $lineAmount = $product->price * $item['quantity'];
                 $lineTax = ($lineAmount * $product->tax_percentage) / 100;
 
-                $preparedItems[] = [
+                $itemsData[] = [
                     'product'        => $product,
                     'quantity'       => $item['quantity'],
                     'unit_price'     => $product->price,
@@ -63,6 +65,7 @@ class InvoiceService
                 $totalTax += $lineTax;
             }
 
+            //payment validation
             $grandTotal = round($subTotal + $totalTax, 2);
             $amountPaid = round($payload['amount_paid'], 2);
 
@@ -70,8 +73,7 @@ class InvoiceService
                 throw new \Exception('Paid amount is less than invoice total');
             }
 
-            $balanceAmount = round($amountPaid - $grandTotal, 2);
-            $changeAmount = (int) floor($balanceAmount);
+            $changeAmount = (int) floor($amountPaid - $grandTotal);
 
             //create invoice
             $invoice = Invoice::create([
@@ -86,7 +88,7 @@ class InvoiceService
             ]);
 
             //save item reduce stock
-             foreach ($preparedItems as $row) {
+            foreach ($itemsData as $row) {
 
                 InvoiceItem::create([
                     'invoice_id'     => $invoice->id,
@@ -106,22 +108,49 @@ class InvoiceService
 
             $changeResult = $this->denominationService->computeChange($changeAmount);
 
-            $returnedAmount = array_sum(
-                                array_map(fn($k,$v) => $k * $v,
-                                    array_keys($changeResult['breakdown']),
-                                    $changeResult['breakdown']
-                                )
-                            );
+            $breakdown = $changeResult['breakdown'] ?? [];
+
+            if (!is_array($breakdown)) {
+                throw new \Exception('Unable to return change with available denominations');
+            }
+
+            $returnedAmount = 0;
+            foreach ($breakdown as $note => $count) {
+                $returnedAmount += ($note * $count);
+            }
 
             $invoice->update([
                 'balance_returned'  => $returnedAmount,
-                'balance_breakdown' => $changeResult['breakdown'],
+                'balance_breakdown' => $breakdown,
             ]);
 
-            if (!empty($changeResult['breakdown'])) {
-                $this->denominationService
-                    ->deductNotes($changeResult['breakdown']);
+            if (!empty($breakdown)) {
+                $this->denominationService->deductNotes($breakdown);
             }
+
+            //load relation
+            $invoice->load('customer', 'invoiceItems.product');
+
+            //send mail after commit
+            DB::afterCommit(function () use ($invoice) {
+
+                // reload invoice safely with relations
+                $invoice = Invoice::with(['customer', 'invoiceItems.product'])
+                    ->find($invoice->id);
+
+                if (!$invoice || !$invoice->customer?->email) {
+                    return;
+                }
+
+                // generate pdf
+                $pdf = Pdf::loadView('invoices.pdf', [
+                    'invoice' => $invoice
+                ]);
+
+                // send mail with pdf attached
+                Mail::to($invoice->customer->email)
+                    ->send(new InvoiceMail($invoice, $pdf->output()));
+            });
 
             return $invoice;
         });
